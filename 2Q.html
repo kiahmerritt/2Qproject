@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学生課題Todoアプリ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --main-pink: #f8719d;
+      --main-blue: #81c7d4;
+      --main-orange: #f4a261;
+      --main-red: #e76f51;
+      --bg-light: #faf4ef;
+      --bg-dark: #2c2c2e;
+      --card-dark: #3a3a3c;
+      --text-light: #1a1a1a;
+      --text-dark: #f5f5f5;
+      --border-light: #e5e5e5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+
+    header h1 {
+      color: var(--main-pink);
+      margin-bottom: 8px;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+      justify-content: center;
+    }
+
+    .form-section, .task-section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 400px;
+      flex: 1;
+    }
+
+    body.dark .form-section,
+    body.dark .task-section {
+      background-color: var(--card-dark);
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      font-size: 1em;
+    }
+
+    button.add {
+      background-color: var(--main-pink);
+      color: white;
+      font-weight: bold;
+      border: none;
+    }
+
+    .task-card {
+      background-color: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    body.dark .task-card {
+      background-color: var(--card-dark);
+    }
+
+    .priority-低 { color: var(--main-blue); font-weight: bold; }
+    .priority-中 { color: var(--main-orange); font-weight: bold; }
+    .priority-高 { color: var(--main-red); font-weight: bold; }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .form-section, .task-section {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>学生課題Todoアプリ</h1>
+    <button class="toggle-btn" onclick="toggleTheme()">ダークモード</button>
+  </header>
+
+  <div class="container">
+    <section class="form-section">
+      <input type="text" id="title" placeholder="課題タイトル" />
+      <input type="text" id="subject" placeholder="科目名" />
+      <input type="date" id="due" />
+      <select id="priority">
+        <option value="低">優先度: 低</option>
+        <option value="中">優先度: 中</option>
+        <option value="高">優先度: 高</option>
+      </select>
+      <select id="status">
+        <option value="未着手">ステータス: 未着手</option>
+        <option value="進行中">ステータス: 進行中</option>
+        <option value="完了">ステータス: 完了</option>
+      </select>
+      <textarea id="memo" placeholder="メモ欄（任意）"></textarea>
+      <button class="add" onclick="addTask()">＋追加</button>
+    </section>
+
+    <section class="task-section">
+      <label for="sort">並び替え：</label>
+      <select id="sort" onchange="renderTasks()">
+        <option value="due">提出期限順</option>
+      </select>
+      <div id="tasks"></div>
+    </section>
+  </div>
+
+  <script>
+    let tasks = [];
+    const tasksContainer = document.getElementById('tasks');
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    function saveTasksToLocalStorage() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function loadTasksFromLocalStorage() {
+      const stored = localStorage.getItem('tasks');
+      if (stored) {
+        tasks = JSON.parse(stored);
+        renderTasks();
+      }
+    }
+
+    function addTask() {
+      const title = document.getElementById('title').value;
+      const subject = document.getElementById('subject').value;
+      const due = document.getElementById('due').value;
+      const priority = document.getElementById('priority').value;
+      const status = document.getElementById('status').value;
+      const memo = document.getElementById('memo').value;
+
+      if (!title || !subject || !due) {
+        alert("必須項目が未入力です");
+        return;
+      }
+
+      tasks.push({ title, subject, due, priority, status, memo });
+      clearForm();
+      renderTasks();
+    }
+
+    function clearForm() {
+      document.getElementById('title').value = '';
+      document.getElementById('subject').value = '';
+      document.getElementById('due').value = '';
+      document.getElementById('priority').value = '低';
+      document.getElementById('status').value = '未着手';
+      document.getElementById('memo').value = '';
+    }
+
+    function renderTasks() {
+      tasksContainer.innerHTML = '';
+      const sort = document.getElementById('sort').value;
+      const sorted = tasks.slice().sort((a, b) => {
+        if (sort === 'due') {
+          return new Date(a.due) - new Date(b.due);
+        }
+        return 0;
+      });
+
+      sorted.forEach((task, idx) => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        if (task.status === "完了") card.style.
