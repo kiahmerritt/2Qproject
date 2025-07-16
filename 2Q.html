@@ -218,4 +218,48 @@
       sorted.forEach((task, idx) => {
         const card = document.createElement('div');
         card.className = 'task-card';
-        if (task.status === "完了") card.style.
+        if (task.status === "完了") card.style.opacity = "0.6";
+
+        card.innerHTML = `
+          <h3>${task.title}</h3>
+          <p><strong>科目:</strong> ${task.subject}</p>
+          <p><strong>提出期限:</strong> ${task.due}</p>
+          <p><strong>優先度:</strong> <span class="priority-${task.priority}">${task.priority}</span></p>
+          <p><strong>ステータス:</strong> ${task.status}</p>
+          <p><strong>メモ:</strong> ${task.memo}</p>
+          <button onclick="changeStatus(${idx})">⟳ ステータス変更</button>
+          <button onclick="deleteTask(${idx})">削除</button>
+        `;
+        tasksContainer.appendChild(card);
+      });
+
+      saveTasksToLocalStorage();
+    }
+
+    function changeStatus(index) {
+      const order = ["未着手", "進行中", "完了"];
+      const current = tasks[index].status;
+      const next = order[(order.indexOf(current) + 1) % order.length];
+      tasks[index].status = next;
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      if (confirm("削除してもいいですか？")) {
+        tasks.splice(index, 1);
+        renderTasks();
+      }
+    }
+
+    window.onload = () => {
+      loadTasksFromLocalStorage();
+
+      // テーマも保存された状態で復元
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+      }
+    };
+  </script>
+</body>
+</html>
